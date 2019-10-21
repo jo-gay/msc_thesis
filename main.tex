@@ -33,14 +33,14 @@
        \textbf{Jo Gay\\[1cm]{Supervisors: Johan Öfverstedt and Joakim Lindblad \\Reviewer: Nata\v sa Sladoje}}
        
     \vspace{0.5cm}
-    June 2019
+    October 2019
   
     \vspace{0.8cm}
  
 %       \includegraphics[width=0.4\textwidth]{university}
  
-    Institutionen för informationsteknologi\\
-    Uppsala Universitet\\
+    Department of Information Technology\\
+    Uppsala University\\
     Sweden\\
 
 
@@ -57,13 +57,15 @@ The two models evaluated here are PCANet-based Structural Representations (PSR, 
 \tableofcontents
 \chapter{Introduction}
 
-It is common in modern medical applications for multiple images of the same entity to be collected. The images may be taken at different times (such as pre- and post-treatment, annual checkups), different resolutions, from different viewpoints, or using two or more different imaging techniques or modalities (e.g. ultrasound and MRI). To maximise the utility of such sets of images, it is necessary to align, or register them. This is particularly challenging for multi-modal images, due to the different properties being imaged. For example, an ultrasound image shows a measure of the acoustic properties of a region, whereas an MRI shows a measure of hydrogen atom density. This means that the images look inherently very different.
+It is common in modern medical applications for multiple images of the same entity to be collected. The images may be taken at different times (such as pre- and post-treatment, annual checkups), different resolutions, from different viewpoints, or using two or more different imaging techniques or modalities (e.g. ultrasound and magnetic resonance imaging (MRI)). To maximise the utility of such sets of images, it is necessary to align (register) them, to provide an integrated or fused view \citep{oliveira2014medical}. This is particularly challenging for multi-modal images, due to the variability of the appearance of the same structure when viewed by different technologies \citep{simonovsky2016deep}. For example, an ultrasound image shows a measure of the acoustic properties of a region, whereas an MRI scan shows a measure of hydrogen atom density. This means that the images look inherently very different.
 Other properties also tend to differ between modalities, such as the noise distribution, image extent and resolution, and other imaging variations. 
 
-The availability of multi-modal imaging systems is also increasing. Modern microscopy, by utilizing combinations of different imaging techniques, enables capturing of overlapping fields of view of the same specimen in micro- and nano-scales, providing very information rich data. In most cases no direct mapping of intensities exists between images of different modalities, and reliable feature points are often lacking. In many cases manual interaction is required for the registration step, which is costly, tedious and imprecise. This leads to an increasing need for the development of image analysis methods which are applicable to such multi-channel data. Many different registration methods exist, from classical approaches based on mutual information, through landmark recognition and structural representation, to neural network-based methods. This study therefore seeks to evaluate automatic image registration techniques for multi-modal image pairs, focusing on the application of structural representation methods to multi-photon microscopy images.
+The range of multi-modal imaging systems available is also increasing (e.g. photoacoustic imaging, \cite{kim2018multimodal}). 
+%Modern microscopy, by utilizing combinations of different imaging techniques, enables capturing of overlapping fields of view of the same specimen in micro- and nano-scales, providing very information rich data. %from original thesis proposal, no citations
+In most cases no direct mapping of intensities exists between images of different modalities, and the automatic location of reliable feature points is an open problem in medical imaging \citep{sotiras2013deformable}. In many cases manual interaction is required for the registration step, which is costly, tedious and imprecise. This leads to an increasing need for the development of image analysis methods which are applicable to such multi-channel data. Many different registration methods exist, from classical approaches based on mutual information, through landmark recognition and structural representation, to neural network-based methods. This study therefore seeks to evaluate automatic image registration techniques for multi-modal image pairs, focusing on the application of structural representation methods to multi-photon microscopy images.
 
-Development of techniques for image registration is an active field, with ongoing research activity in all aspects of registration, but particularly in multi-modal image registration where much work is still needed to improve the accuracy of registration and extend the range of image types that can be registered. Many multi-modal registration methods have been published, which can be broadly categorized into intensity-based, feature-based, and learning-based methods. %TODO: is this the right categorization given that I then treat structural representations as a category? 
-One classical approach, which will form the starting point of this study and provide reference results for comparison, is based on mutual information maximisation. This measure uses information theory to quantify the extent to which knowledge of the intensity in one image can be used to predict the intensity in the other, at a global level. This is an example of an intensity-based approach, of which many variants have been published. Another approach is feature-based registration, in which distinctive features such as corners are detected in both images, in order to map their locations. This category also includes structural representation methods, which aim to overcome modality differences by characterising the structures within both images, and registering a representation of these structures instead of the images directly. A third approach is to use supervised learning, where a neural network uses a set of labelled training examples to learn how to estimate the transformation. %TODO: only supervised learning? What about the GAN/cycleGAN proposed by Nicklas/Nadia?
+Development of techniques for image registration is an active field \citep{oliveira2014medical}, with ongoing research activity in all aspects of registration, but particularly in multi-modal image registration where much work is still needed to improve the accuracy of registration and extend the range of image types that can be registered. Many multi-modal registration methods have been published, which can be broadly categorized into intensity-based, feature-based, and learning-based methods. %TODO: is this the right categorization given that I then treat structural representations as a category? 
+One classical approach, which will form the starting point of this study and provide reference results for comparison, is based on mutual information maximisation. This measure uses information theory to quantify the extent to which knowledge of the intensity in one image can be used to predict the intensity in the other, at a global level \citep{wells1996multi}. This is an example of an intensity-based approach, of which many variants have been published. Another approach is feature-based registration, in which distinctive features such as edges and corners are detected in both images, and converted to a set of descriptors which can subsequently be matched with those detected in another image. This category includes structural representation methods, which aim to overcome modality differences by characterising the structures within both images, and registering a representation of these structures instead of the images directly. A third approach is to use supervised learning, where a neural network uses a set of labelled training examples to learn how to estimate the transformation. %TODO: only supervised learning? What about the GAN/cycleGAN proposed by Nicklas/Nadia?
 
 In this study, two recently-published and promising methods for multi-modal image registration are implemented and tuned. Their performance is evaluated and compared using biomedical images from different modalities including brightfield microscopy and multi-photon microscopy. Due to the large differences between these modalities, structural representation methods are selected, for their ability to detect commonality between images in the absence of any image intensity relationships. An extensible framework for the application of arbitrary registration methods and optimization algorithms to pairs of images is developed. 
 %This framework is utilized to evaluate the performance of a range of state-of-the-art methods on a multi-modal biomedical dataset. 
@@ -101,40 +103,49 @@ Within medical image registration, early uses concentrated on finding the scale 
 
 %Todo: More pictures of examples of registration
 
-The simplest form of registration is \textit{rigid} registration. This consists of choosing values for six parameters (three for two-dimensional images) to describe the optimal rotation and translation of one (\textit{floating}) image in 3 dimensions, to match it with the other (\textit{reference}) image. The inclusion of further \textit{affine} transformations including scaling, reflection, and shearing adds more flexibility to the registration. In the most general case, a non-linear or \textit{elastic} registration method allows the floating image to be deformed, for example to account for changes due to breathing or the heart beating during scanning.
+The simplest form of registration is \textit{rigid} registration. This is achieved by choosing values for three parameters: horizontal and vertical translation, and rotation within the plane. For 3D images, depth translation and two additional axes of rotation are added, giving six parameters. The inclusion of further \textit{affine} transformations including scaling, reflection, and shearing adds more flexibility to the registration. In the most general case, a non-linear or \textit{elastic} registration method allows the floating image to be deformed, for example to account for changes due to breathing or the heart beating during scanning.
+
+The transform sought is the one which, when applied to one image (referred to as the \textit{floating} image), gives the best match with the other (\textit{reference}) image. Defining a robust and effective measure for the quality of such a match, between arbitrary image modalities, is an open problem. Some of the most important advances in this field, particularly those which form the basis of the methods tested, are outlined in the following sections.
 %Todo: Continue writing classical and recent important literature summary.
 
 This study deals exclusively with multi-modal analysis of biomedical images in two dimensions. However, methods that are designed for multi-view or multi-temporal analysis are also described here, where relevant to the methods that are evaluated. Some of the methods discussed were first published for three-dimensional (volume) data but can be applied also to two-dimensional images. The remainder of this chapter gives an overview of these registration methods, including intensity-based similarity measures such as mutual information, feature-based techniques including the scale-invariant feature transform, structural representation techniques, and deep learning. The details of the two methods evaluated in this study can be found in Chapter \ref{sec:models}.
 
 \section{Intensity-based Similarity Measures}
-Intensity-based measures in general compare the intensity at each pixel (or voxel) in the reference image with that at the corresponding pixel in the floating image, under a given transform. In the simplest case, the resulting metric is aggregated globally over all pixels to give a scalar similarity measure. Some methods modify this to account for local variation in contrast or intensity, e.g. to improve performance in the presence of shadows.
+Intensity-based measures in general compare the intensity at each pixel (or voxel) in the reference image with that at the corresponding pixel in the floating image, under a given transform. In the simplest case, the resulting metric is aggregated globally over all pixels to give a scalar similarity (or dissimilarity) measure. Some methods modify this to account for local variation in contrast or intensity, e.g. to improve performance in the presence of shadows.
+
+Various intensity-based similarity measures are described below. In each case, the measure itself only provides a metric to evaluate the alignment for a given transform $T$. In order to register a pair of images $A$ and $B$, it is necessary to find the transform $\hat{T}$ that, when applied to $B$, maximises the similarity $S(A, T(B))$ of the two images, i.e. 
+\[
+\hat{T}=\argmax_T S(A,T(B)).
+\]
+This is commonly achieved using gradient ascent, but many other optimization techniques have been proposed, such as particle swarm optimization (e.g. \cite{wachowiak2004approach}).
+
 \subsection{Sum of Squared Differences}
-A simple measure of the dissimilarity between a pair of images is the sum of squared differences (SSD). For images $I$ and $J$, with intensities $I(x)$ and $J(x)$, the SSD is given by
+A simple measure of the dissimilarity between a pair of images is the sum of squared differences (SSD) between the intensities at corresponding pixels. For images $I$ and $J$, with intensities at each pixel $x$ given by $I(x)$ and $J(x)$, the SSD is defined as:
 \[
 SSD = \sum_{x} (I(x)-J(x))^2,
 \]
-where the sum is over all overlapping pixels $x$ under a given transform. Since the number of overlapping pixels varies depending on the transform used, the mean squared error (MSE) is normally used instead, i.e.
+where the sum is over all overlapping pixels $x$ of the two images. Since the number of overlapping pixels varies with changed position of $J$ (e.g. when it is transformed during registration), the mean squared error (MSE) is normally used instead, i.e.
 \[
 MSE = \frac{1}{N}\sum_{x} (I(x)-J(x))^2,
 \]
-for a pair of images overlapping at $N$ pixels. The optimal alignment is then the one that minimizes the MSE. However, this measure is not robust to variations in (for example) illumination, and can be biased by large intensity differences at a few pixels, which may occur due to noise. It is also only applicable to mono-modal image registration.
+for a pair of images overlapping at $N$ pixels. The optimal alignment is then the one that minimizes the MSE. However, this measure is not robust to variations in (for example) illumination, and can be biased by large intensity differences at a few pixels, which may occur due to noise or changes in illumination. It is also only applicable to mono-modal image registration.
 
 \subsection{Mutual Information}
 \begin{figure}
 \centering
-\includegraphics[width = 5 in]{MI_joint_histogram.png}
-\caption{Mutual Information histograms for aligned and misaligned images. A pair of artificial images is shown, each containing three intensity values, plus smoothing and noise. On the left, the images are misaligned, and in this case six separate peaks can be seen in the joint histogram of intensity values. The first image has entropy $H_A=3.62$, the second has entropy $H_B=4.36$. The joint entropy when misaligned is $H_{AB}=7.39$, giving mutual information $I(A,B)=H_A+H_B-H_{AB}=0.59$. On the right, the images have been aligned by applying rotation and translation, and pixels that do not overlap are excluded, shown here as white regions. Only three peaks can be seen in the joint histogram, corresponding to the three main intensities in the images. Masking out non-overlapping pixels increases the entropy of the individual images to $H_A'=3.67$, $H_B'=4.82$. The joint entropy however is reduced to $H_{AB}'=7.34$, giving a mutual information score of $I(A,B)'=1.15$.}
+\includegraphics[width = 5.5 in]{MI_joint_histogram.png}
+\caption{Mutual Information histograms for aligned and misaligned images. A pair of artificial images is shown, each containing three intensity values, plus smoothing and noise. On the left, the images are misaligned, and in this case six separate peaks can be seen in the joint histogram of intensity values. The first image has entropy $H_A=3.62$, the second has entropy $H_B=4.36$. The joint entropy when misaligned is $H_{AB}=7.39$, giving mutual information MI$(A,B)=H_A+H_B-H_{AB}=0.59$. On the right, the images have been aligned by applying rotation and translation, and pixels that do not overlap are excluded, shown here as white regions. Only three peaks can be seen in the joint histogram, corresponding to the three main intensities in the images. Masking out non-overlapping pixels increases the entropy of the individual images to $H_{A'}=3.67$, $H_{B'}=4.82$. The joint entropy however is reduced to $H_{A'B'}=7.34$, giving a mutual information score of MI$(A',B')=1.15$.}
 \label{fig:MI_histogram}
 \end{figure}
 
-The use of mutual information (MI) for image registration was first proposed by \cite{wells1996multi} and \cite{viola1997alignment}, and at the same time by \cite{maes1997multimodality}. MI is a global information theoretic measure which evaluates the amount of information about one image that can be gleaned from another, for a given alignment, and is based purely on the pairs of image intensities at each overlapping position. This does not require there to be a one-to-one or continuous mapping between intensities in the two images, nor any common edges or features. This makes the method particularly suitable for multi-modal image registration. Intuitively, it relies on the assumption that there will be some set of structures that appear similar to each other in one image (self-similarity), that are also self-similar in the other image. The more that this assumption holds true, the more the knowledge of the intensities in one image gives information about the likely intensities in the other image.
+The use of mutual information (MI) for image registration was first proposed by \cite{wells1996multi} and \cite{viola1997alignment}, and at the same time by \cite{maes1997multimodality}. MI is a global information theoretic measure which evaluates the amount of information about one image that can be gleaned from another, for a given alignment, and is based purely on the pairs of image intensities at each overlapping position. This does not require there to be a one-to-one or continuous mapping between intensities in the two images, nor any common edges or features. This makes the method particularly suitable for multi-modal image registration. Intuitively, it relies on the assumption that there will be some set of structures that appear similar to each other in one image (self-similarity), that are also self-similar in the other image. The more truth there is in this assumption, the more the knowledge of the intensities in one image gives information about the likely intensities in the other image.
 
 The mutual information between a pair of images $A$ and $B$ is calculated as
 \begin{equation}
-I(A,B) = H_A + H_B - H_{AB},
+\text{MI}(A,B) = H_A + H_B - H_{AB},
 \label{eq:MI}
 \end{equation}
-where $H_X$ is the entropy of image $X$. If the image has $L$ intensity levels (e.g. $L=255$ for 8 bit images), appearing with probabilities $p_0, ..., p_{L-1}$, its entropy is defined as
+where $H_X$ is the entropy of image $X$ and $H_{XY}$ is the joint entropy between images $X$ and $Y$, as defined below. If an image has $L$ intensity levels (e.g. $L=255$ for 8 bit images), appearing with probabilities $p_0, ..., p_{L-1}$, its entropy is defined as
 \[
 H_X = - \sum_{i = 0}^L p_i \text{log}({p_i}).
 \]
@@ -145,26 +156,26 @@ For pairs of images, the entropy is defined similarly, but using pairs of intens
 H_{AB} = - \sum_{i = 0}^{L^2} p_i \text{log}({p_i}).
 \]
 
-The total image entropies $H_A$ and $H_B$ for the reference and floating images respectively are fixed values, but when calculating the MI of a particular candidate alignment only the overlapping part of the floating image is included. This means that as the proposed registration changes $H_B$ also changes, but in the method proposed by \cite{wells1996multi}, $H_A$ is treated as a constant. It is also possible (e.g. see \cite{maes1997multimodality}) to consider only the overlapping parts of both images, allowing both $H_A$ and $H_B$ to change according to the alignment. This is the approach adopted here when evaluating methods, in Section \ref{sec:evaluation}, and is illustrated in Figure \ref{fig:MI_histogram}.
+The total image entropies $H_A$ and $H_B$ for the reference and floating images respectively are fixed values, but when calculating the MI of a particular candidate alignment only the overlapping part of the floating image is included. This means that as the proposed registration changes, $H_B$ also changes, but in the method proposed by \cite{wells1996multi}, $H_A$ is treated as a constant. It is also possible (e.g. see \cite{maes1997multimodality}) to consider only the overlapping parts of both images, allowing both $H_A$ and $H_B$ to change according to the alignment. This is the approach adopted here when evaluating methods, in Section \ref{sec:evaluation}, and is illustrated in Figure \ref{fig:MI_histogram}.
 
 The calculation of MI uses the relative probabilities of each pair of intensities found in the two images. The probability $p_i$ of a particular intensity value occurring in an image can be estimated empirically as the normalised frequency of observations of that value, and the joint histogram can be constructed similarly. Since the locations in the transformed image are likely to lie in between original pixel co-ordinates, in the simplest implementation the intensity values used in the histogram may be calculated based on their nearest neighbour, or using bilinear or spline interpolation followed by binning. Improved results, particularly if sub-pixel accuracy is desired, may be obtained using partial volume interpolation to update the histogram such that each off-pixel point contributes a weighted amount to the histogram at the intensity values of each of its nearest whole-pixel neighbours \citep{maes1997multimodality}. Alternatively, \cite{viola1997alignment} smoothed the probability estimates by using a window function known as a Parzen Estimator \citep{parzen1962estimation}, calculated as:
 \[
 p_i \approx \frac{1}{N} \sum_{a_j \in I} R(i - I(a_j)),
 \]
-where $R(x)$ is a window function, such as a Gaussian density function, that integrates to 1, and $N$ is the number of pixels (or voxels) in image $I$, which has intensity $I(a)$ at pixel $a$.
+where $R(x)$ is a window function, such as a Gaussian density function, that integrates to 1, and $N$ is the number of pixels (or voxels) in image $I$, and the image has intensity $I(a)$ at pixel $a$.
 
 These histogram modifiers are designed to increase the robustness of the metric to noise, as well as to improve the smoothness of the MI gradient as the transform changes, but also tend to increase the computation time. Another way to reduce the impact of noise is to bin intensity values, e.g. into 32 bins, and this is adopted here (following \cite{gee2003biomedical} and others).
 
 Maximization of mutual information leads to a good alignment in many multi-modal cases, without requiring any \textit{a priori} knowledge of the correspondence between different intensities in the two modalities. For example, \cite{wells1996multi} presented the results of using MI to register 3-dimensional magnetic resonance (MR) images with both computed tomography (CT) and positron-emission tomography (PET) images. 
 
-MI remains a popular and commonly-used measure of image similarity, particularly for multi-modal image alignment. However, it can be difficult to locate the MI maximum, due to the existence of local optima and/or low gradients, particularly when the initial registration is far from the true alignment, and/or in the presence of noise \citep{maes1997multimodality}.
+MI remains a popular and commonly-used measure of image similarity, particularly for multi-modal image alignment \citep{oliveira2014medical}. However, it can be difficult to locate the MI maximum, due to the existence of local optima and/or low gradients, particularly when the initial registration is far from the true alignment, and/or in the presence of noise \citep{maes1997multimodality}.
 
 \subsection{Variants of Mutual Information}
 Several refinements to mutual information have been published, including Normalized Mutual Information, Adjusted Mutual Information, and Region Mutual Information. These aim to improve the performance of mutual information in various situations.
 
 \cite{studholme1999overlap} introduced \textbf{Normalized Mutual Information} (NMI). This is designed to deal with the case where the size of the region of overlap between two images may change depending on the chosen registration parameters, which can lead to unwanted effects on the mutual information statistic. Instead of calculating the difference between the marginal and joint entropies (as in Equation \ref{eq:MI}), the NMI is given by the ratio:
 \begin{equation}
-I_N(A,B) = \frac{H_A + H_B}{H_{AB}}.
+\text{NMI}(A,B) = \frac{H_A + H_B}{H_{AB}}.
 \label{eq:NMI}
 \end{equation}
 
@@ -179,20 +190,17 @@ The negative joint entropy $-H_{AB}$ can also be used on its own as a global mea
 
 \cite{rogelj2003point} developed a Segmentation-Based Point Similarity Measure which first estimates the classes of intensity pairs that are true correspondences, based on the distribution of intensity pairs in the current alignment, and assumes that at the correct alignment the intensity pairs follow a Gaussian distribution around the centres of these classes. This gives a model of the joint intensity distribution which can then be used to assess the quality of the registration.
 
-\subsection{Registration with intensity-based similarity measures}
-For each of the above measures of image similarity, the measure itself only provides a metric to evaluate the alignment for a given transform $T$. In order to register a pair of images $A$ and $B$, it is necessary to find the transform $\hat{T}$ that, when applied to $B$, maximises the similarity $S(A, T(B))$ of the two images, i.e. 
-\[
-\hat{T}=\argmax_T S(A,T(B)).
-\]
-This is commonly achieved using gradient ascent, but many other optimization techniques have been proposed, such as particle swarm optimization (e.g. \cite{wachowiak2004approach}).
 
 
 \section{Feature-based Techniques}
 One inherent drawback of intensity-based registration methods such as most of those described above is that they treat the images as a one-dimensional array of intensity values, and make no use of information about the locality or neighbourhood in which each value occurs. Feature-based techniques approach the problem from a different angle, looking instead for common structures such as corners within an image, and then trying to find a correspondence between the sets of features found in each image. This can facilitate comparison of images which differ in (for example) lighting conditions or contrast, because the intensities are not used directly.
 
-In general the first step is to identify keypoints within each image, and describe them in a way that can be compared across different scales, orientations, and/or imaging conditions. Then these keypoints must be matched between the two images, and from this, an appropriate transform can be inferred. Feature-based techniques are also commonly used for image recognition.
+In general the first step is to identify keypoints within each image, and describe them in a way that can be compared across different scales, orientations, and/or imaging conditions. It is then necessary to find a correspondence between these sets of features, and then finally to calculate the transform $T$ that best explains the feature pairing. Since many hundreds of keypoints may be found in each image, matching them is not a trivial task. A brute-force approach, in which each keypoint descriptor in one set is compared to every keypoint descriptor in the other set, is highly computationally intensive, and produces many incorrect matches. An improvement can be made by using a ratio test, in which the two closest matches are compared, and the point is rejected if the ratio of their distances is higher than some threshold, usually set to 0.8. This reduces the number of false matches found by 90\% \citep{lowe2004distinctive}. If the descriptor dimensionality is high, or a large number of keypoints is detected, it is often necessary to use an approximate search method to speed up the matching process.
 
-Some of the most commonly used feature-based methods are outlined in this section.
+Once a set of keypoint pairings has been chosen, Random Sample Consensus (RANSAC, \cite{fischler1981random}) can be used to determine what transform $T$ best maps one image to the other. This is a method for estimating the underlying model that best fits a set of data points, in the presence of outliers. It randomly selects a small subsample of the data points, fits a model (or transform) to this set, and then checks to see how well the resulting model explains the other points in the dataset. The procedure is repeated a fixed number of times and the model explaining the highest number of data points is selected. The final model may then be refined using all of the explained points, i.e. ignoring outliers.
+
+Feature-based techniques are commonly used for image recognition, and some of the most popular methods are outlined in this section.
+
 \subsection{Harris corner detector}
 \begin{figure}
 \centering
@@ -200,12 +208,12 @@ Some of the most commonly used feature-based methods are outlined in this sectio
 \caption{An example showing features detected with the Harris corner detector. Image by  Dvortygirl \texttt{https://commons.wikimedia.org/w/index.php?curid=11497200}.}
 \label{fig:harris_features}
 \end{figure}
-An early feature-detection method was developed for tracking objects in the presence of camera motion, by \cite{harris1988combined}. This method identifies corners as locations where the image intensity gradient is high in multiple directions, at a specified scale. The Harris corner detector, and variants upon it, are the basis of many feature-detection methods. An example of the features that would detected by the Harris corner detector is shown in Figure \ref{fig:harris_features}.
+An early feature-detection method was developed for tracking objects in the presence of camera motion, by \cite{harris1988combined}. This method identifies corners as locations where the image intensity gradient is high in multiple directions, at a specified scale. The Harris corner detector, and variants upon it, are the basis of many feature-detection methods. An example of the features that would be detected by the Harris corner detector is shown in Figure \ref{fig:harris_features}.
 
 \subsection{Scale-Invariant Feature Transform}
-A popular method in medical image registration in general is the scale-invariant feature transform (SIFT) \citep{lowe2004distinctive}. This uses a multi-scale Difference of Gaussians (DoG) approach to locate and describe keypoints in an image
+A popular method in image registration in general is the scale-invariant feature transform (SIFT) \citep{lowe2004distinctive}. This uses a multi-scale Difference of Gaussians (DoG) approach to locate and describe keypoints in an image.
 %, which can then be compared to a large database of features for object recognition
-. The feature descriptors, consisting of 128 values for each keypoint, are invariant to orientation and scale. This property is important for image registration, as it allows keypoints in one image to be matched with those in another image, which may be at a different rotation, scale etc. 
+The feature descriptors, consisting of 128 values for each keypoint, are invariant to orientation and scale. This property is important for image registration, as it allows keypoints in one image to be matched with those in another image, which may be at a different rotation, scale etc. 
 %Then the transform which maps the keypoints most accurately from one image to the other, provides the optimal image registration.
 
 \subsection{Features from Accelerated Segment Test (FAST)}
@@ -220,16 +228,12 @@ The application of supervised learning allowed \cite{rosten2006machine} to devel
 
 Applying the full segment test directly to each pixel proved too costly for real-time video processing. Although significant speed improvements can be made by first testing just 4 pixels from the circle of 16, and only continuing if these values indicate a potential corner, this restricts the possible values of $n$ to 12 or greater, thereby excluding any shallow corners from being detected. Instead, the authors trained a decision tree model, by using the full segment test to define the desired outputs for a set of training images. The tree can then be applied to unseen images to predict where the corner features are located. A score function can be applied to each of these detected points, to filter out the weaker signals.
 
-Once trained, the decision tree is extremely fast and can be used to detect features in video streams in real time. As well as speed advantages the method was shown to outperform several other methods, including the Harris corner detector and methods based on the Difference of Gaussians (as used by SIFT).
+Once trained, the decision tree is extremely fast and can be used to detect features in video streams in real time. As well as speed advantages, the method was shown to outperform several other methods, including the Harris corner detector and methods based on the Difference of Gaussians (as used by SIFT).
 %Todo: write more about SIFT and FAST and others
 
 %
 %\subsection{Oriented FAST and Rotated BRIEF (ORB)}
 %\cite{rublee2011orb} also developed a faster alternative to SIFT, known as ORB. This modifies the BRIEF feature descriptor \citep{calonder2010brief} to improve its performance in the presence of rotation, and modifies the FAST keypoint finder \citep{rosten2006machine} to add a measure of the orientation of keypoints. Their results showed that ORB can match or outperform SIFT in many applications, particularly in the presence of noise and/or orientation differences.
-
-\subsection{Registration with feature-based techniques}
-The above techniques extract a set of feature locations from each image that is to be aligned, and give each location a feature description. It is then necessary to find a correspondence between these features, and then finally to calculate the transform $T$ that best explains the feature pairing. Since many hundreds of keypoints may be found in each image, matching them is not a trivial task. A brute-force approach, in which each keypoint descriptor in one set is compared to every keypoint descriptor in the other set, is highly computationally intensive. Instead, the K-Nearest Neighbour (KNN) algorithm is often used to determine the best match for each keypoint in one image. When each keypoint in one image has been allocated a corresponding location in the other image, then Random Sample Consensus (RANSAC, \cite{fischler1981random}) can be used to determine what transform $T$ best maps one image to the other.
-%TODO: this is still short - write something about KNN.
 
 \section{Structural representation techniques}
 \label{sec:backgroundSR}
@@ -262,13 +266,14 @@ The distance measure $D$ for a pair of pixels ($x$ and $r$) within a single imag
 D(x,r) = \sum_p (I(x+p)-I(r+p))^2,
 \]
 where $I(x)$ is the image intensity at point $x$ and $x+p$ indicates the position of $x$, offset by $p$. The patch size can be configured for the particular application. 
+%They use the exponential of the distance measure $D$ divided by a local variance measure $V$ (equal to the average distance metric between the current pixel and its four immediate neighbours) and normalized with a constant $n$, calculated for some set of nearby pixels $r \in R$, as a descriptive vector for each pixel:
 
-They use the exponential of the distance measure $D$, divided by a local variance measure $V$ (equal to the average distance metric between the current pixel and its four immediate neighbours) and normalized, calculated for some set of nearby pixels $r \in R$, as a descriptive vector for each pixel:
+They divide the distance measure $D$ by a local variance measure $V$ (equal to the average distance metric between the current pixel $x$ and its four immediate neighbours), and use this to define a descriptive vector as follows: 
 
 \[
-\text{MIND}(x,r) = \frac{1}{n}\text{exp}\left( - \frac{D(x, r)}{V(x)} \right), r \in R.
+\text{MIND}(x,r) = \frac{1}{n}\text{exp}\left( - \frac{D(x, r)}{V(x)} \right),
 \]
-
+where $n$ is a normalization constant. The metric is calculated for every pixel $r$ in the chosen set of neighbour pixels $R$, giving an $r$-dimensional descriptive vector for each pixel in the image.
 \begin{figure}
 \centering
 \includegraphics[width=5.5in]{mind_orig.pdf}
@@ -314,24 +319,36 @@ The filter weights in the CNN are trained separately for each modality of intere
 
 There are several tuneable parameters within the model. In this study the size of the filters was fixed at $3 \times 3$, the number of filters in each layer was fixed as 8, and the number of layers was fixed as 2. The parameter $\alpha$ was set to 0.005. All of these choices follow the recommendations given by the original authors \citep{zhu2018pcanet}. Exploratory experiments with different filter sizes resulted in no improvements in results. Since the method used to construct feature maps from filter outputs in the second layer (described below) weights each subsequent filter half as much as the previous one, the addition of extra filters (at least in the second layer) is also not expected to have a significant impact on the results.
 
-\subsubsection{Calculating the filter weights}
-To determine the filter weights for a given modality, a set of 100 randomly chosen training images are used. For each pixel $j$ in a training image $\Psi_i$, the image intensities in a $3 \times 3$ patch centered on that pixel are collected into a vector $x_{i,j}$. Pixels on the boundary of the image are excluded. For each patch, the patch mean is subtracted to give a zero-centred vector $\bar{x}_{i,j}$. All of these patch vectors, for all of the training images, are collated as the columns of a matrix $\bar{X}$. 
+\subsection{Calculating the filter weights}
+To determine the filter weights for a given modality, a set of $N=100$ randomly chosen training images are used. For each pixel $j$ in a training image $\Psi_i$, the image intensities in a $3 \times 3$ patch centered on that pixel are collected into a vector $x_{i,j}$. Pixels on the boundary of the image are excluded. For each patch, the patch mean is subtracted to give a zero-centred vector $\bar{x}_{i,j}$. All of these patch vectors, for all of the training images, are collated as the columns of a matrix $\bar{X}$. 
 
-Principal components analysis is then employed to determine the $L_1$ principal eigenvectors of this matrix, i.e. those relating to the $L_1$ largest eigenvalues, where $L_1=8$ is the number of filters in the first layer of the network. These eigenvectors are each rearranged into a $3 \times 3$ matrix of filter weights, such that the filter weights are in the same order as the image patches were arranged.
+Principal components analysis is then employed to determine the $L_1$ principal eigenvectors of this matrix, i.e. those relating to the $L_1$ largest eigenvalues, where $L_1=8$ is the number of filters in the first layer of the network. These eigenvectors are each rearranged into a $3 \times 3$ matrix of filter weights, such that the filter weights are in the same order as the image patches were arranged. Convolving the $N$ training images with these $L_1$ filters gives $L_1N$ output feature maps from the first layer, each having the same size as the training images.
 
-The second layer of the CNN consists of $L_2=8$ filters, and takes as its inputs the $L_1$ outputs of the first layer, for each of the training images. Every $3 \times 3$ patch in every input is collected and a similar principal components analysis is performed to determine the filter weights for the second layer.
+The second layer of the CNN consists of $L_2=8$ filters, of size $3 \times 3$. The layer 1 outputs are treated as $L_1N$ separate inputs, rather than being considered as $N$ inputs with $L_1$ channels. As in layer 1, to determine the filter weights every $3 \times 3$ patch in every input is vectorized and a principal components analysis is performed. 
 
-This single application of a two-layer convolutional network completes the training phase of the model; no gradient-based training method (such as backprop) is required. This means that the training phase is fast to compute, although performing PCA on such large collections of vectors is highly memory-intensive. Structural representations are then created by passing images through this network and combining the outputs from the filters and layers into a single output image or feature map.
+This single application of a two-layer convolutional network completes the training phase of the model; no gradient-based training method (such as backprop) is required. This means that the training phase is fast to compute, although performing PCA on such large collections of vectors is highly memory-intensive. 
 
-\subsubsection{Combining the outputs}
+Having chosen the filter weights, a structural representation can be created by passing an image (of the same modality as the training images) through this network and then following the below procedure to combine the outputs from both layers into a single output image or feature map.
+
+\subsection{Combining the outputs}
 \label{sec:featuremaps}
-The CNN described above treats each output from the first layer as a separate input to the second layer, leading to $L_1 \times L_2$ feature map outputs for each image after layer 2. These are first combined into $L_1$ feature maps through a sigmoid activation function and a weighted sum. The layer 2 output for image $i$ is given by 
+Passing an image of interest through the trained network described above results in $L_1$ feature maps being output from layer 1 and $L_1L_2$ from layer 2. The method to turn these outputs into a single structural representation image has three stages:
+\begin{enumerate}
+    \item Combine $L_1L_2$ layer 2 outputs using a weighted sum to obtain $L_1$ feature maps representing the higher level structure
+    \item Fuse the $L_1$ feature maps from each layer (separately) to obtain a fused feature map describing the structure at each level
+    \item Combine these two fused feature maps to produce an output structural image
+\end{enumerate}
+These stages are described below.
+%The CNN described above treats each output from the first layer as a separate input to the second layer, leading to $L_1L_2$ feature map outputs for each image after layer 2. 
+\subsubsection{a) Combine layer 2 outputs}
+The outputs from layer 2, consisting of $L_1L_2$ feature maps, are first combined into $L_1$ feature maps using a sigmoid activation function and a weighted sum. The combined layer 2 output for an image is given by 
 \[
-Z_{i}^{j} = \sum_{k=1}^{L_2} 2^{8-k}(\sigma(|\Psi_i^{j,k}|)-0.5),
+Z^{j} = \sum_{k=1}^{L_2} 2^{8-k}(\sigma(|\Psi^{j,k}|)-0.5),
 \]
-where $\Psi_i^{j,k}$ is the output obtained from applying the $k$th filter in layer 2 to the output $\Psi_i^j$ of filter $j$ in layer 1 for image $i$, and $\sigma(x)$ is the sigmoid function $\sigma(x) = 1/(1+e^{-\alpha x})$ and $\alpha=0.005$. This has the effect of weighting the layer 2 outputs heavily by their PCA rank, i.e. the output from the first layer 2 filter has twice as much impact as that of the second, which has twice the impact of the third filter and so on.
+where $\Psi^{j,k}$ is the output obtained from applying the $k$th filter in layer 2 to the output $\Psi^j$ of filter $j$ in layer 1, and $\sigma(x)$ is the sigmoid function $\sigma(x) = 1/(1+e^{-\alpha x})$ and $\alpha=0.005$. This has the effect of weighting the layer 2 outputs heavily by their PCA rank, i.e. the output from the first layer 2 filter has twice as much impact as that of the second, which has twice the impact of the third filter and so on. The powers of 2 used go between 7, for the filter corresponding to the most significant eigenvector, and zero (or negative, if $L_2>8$), such that the resulting values always lie between 0 and 255.
 
-Having reduced the number of outputs to $L_1$ for each layer, these outputs are then combined into two structural representations, one for each layer, to capture multi-level information. For each layer, a single feature map per original input image is constructed from the $L_1$ outputs by summing the squares of the values in each output:
+\subsubsection{b) Fuse outputs from each layer}
+Having reduced the number of outputs to $L_1$ for each layer, these outputs are then combined into two separate structural representations, one for each layer, to capture multi-level information. For each layer, a single feature map per original input image is constructed from the $L_1$ outputs by summing the squares of the values in each output:
 \[
 F_1 = \frac{1}{L_1^2}\sum_{j=1}^{L_1}(\Psi^j)^2;
 \]
@@ -339,6 +356,7 @@ F_1 = \frac{1}{L_1^2}\sum_{j=1}^{L_1}(\Psi^j)^2;
 F_2 = \frac{1}{L_1^2}\sum_{j=1}^{L_1}(Z^j)^2.
 \]
 
+\subsubsection{c) Create structural image}
 The information from the two layers is then finally combined into a single output image:
 \[
 \text{PSR} = \text{exp}(-\frac{F_1}{h_1})\text{exp}(-\frac{F_2}{h_2}).
@@ -351,10 +369,10 @@ Further details and motivation for this model can be found in \cite{zhu2018pcane
 \label{sec:model2}
 In this model, second order partial derivatives are utilized to characterize the local structure of an image at each pixel as a vector. This set of vectors forms a modality-independent representation of the image, allowing the similarity between two images to be efficiently estimated on the basis of the Hamming distance between the vector representations. The authors \citep{jiang2017fast} describe the Discriminative Local Derivative Patterns (dLDP) model for 3-dimensional images; here it is presented only in 2D.
 
-As well as excellent results in the alignment of different MRI modalities, and CT with MRI, this method was shown to be effective in the alignment of Ultrasound with MRI volumes, a very challenging multi-modal task.
+As well as excellent results in the alignment of different MRI modalities, and CT with MRI, this method was shown to be effective in the alignment of ultrasound with MRI volumes, a very challenging multi-modal task.
 
 \subsubsection{LDP and dLDP}
-Local Derivative Patterns (LDP), illustrated above in Figure \ref{fig:LDP}, were first introduced by \cite{zhang2009local}, encoding the derivatives within a neighbourhood or patch centred on each pixel of an image. They can be thought of as a generalization of Local Binary Patterns \citep{ojala2002multiresolution}, which encode the sign of the first order derivative in each direction. 
+Local Derivative Patterns (LDP), illustrated above in Figure \ref{fig:LDP}, were first introduced by \cite{zhang2009local}, encoding the derivatives within a neighbourhood, or patch, centred on each pixel of an image. They can be thought of as a generalization of Local Binary Patterns \citep{ojala2002multiresolution}, which encode the sign of the first order derivative in each direction. 
 
 The model evaluated here, proposed by \cite{jiang2017fast}, is based on the second order LDP described above in Section \ref{sec:backgroundSR}, which encodes the commonality of direction between the first order derivative at the central pixel and that at its neighbouring pixels, allowing higher-level structural features such as turning points to be identified. This is particularly important for multi-modal image registration because changes in the direction of the gradient are more likely to be preserved between modalities than the gradient itself. However, a drawback of this descriptor is that, in regions where intensity increases continuously in a given direction (no turning points in the gradient), the resulting binary vector will contain all zeros. With high-resolution images this can occur in a large proportion of pixels, leading to a lack of information in the descriptor and difficulty finding the optimal registration. The authors therefore propose discriminative LDPs (dLDPs), which compare the partial derivative in one direction at the central pixel with that in a (set of) different directions at neighbouring pixels. This is illustrated in Figure \ref{fig:dLDP}.
 
@@ -376,7 +394,7 @@ The published method is designed for three-dimensional image data, and the autho
 The resulting 48-bit dLDP structural representation is illustrated for one region in Figure \ref{fig:dLDP_vis}. For each direction pair the output is an 8-bit binary vector for each pixel. This can be visualized by interpreting it as an integer between 0 and 255 and showing the result as an image (this method of visualization is also used in \cite{jiang2017fast}). Two of the six direction pairs are illustrated: ($0^{\circ}$, $90^{\circ}$) and ($45^{\circ}$, $135^{\circ}$). In this visualization method, the higher-position bits are emphasised (probably only the first 3 or 4 bits can be distinguished by eye), but it should be noted that when these descriptors are used as a similarity measure (see below), all bits are given equal weighting.
 
 \subsubsection{Similarity measure between representations}
-A measure of the similarity of two images can then be obtained by calculating the total Hamming distance between their dLDP representations. In this study, the Hamming distance is normalized by dividing by the number of overlapping pixels. This is not proposed by the original authors but it is clear that for our dataset, the total Hamming distance would be biased towards transforms with minimal overlap. An alternative would be to adjust the Hamming distance to equal half the number of bits used in the descriptor, for each non-overlapping pixel. 
+A measure of the similarity of two images can then be obtained by calculating the total Hamming distance between their dLDP representations. In this study, the Hamming distance is normalized by dividing by the number of overlapping pixels. This is not proposed in the original publication but it is clear that for an application where the size of the overlapping region changes significantly depending on the transform parameters, the total Hamming distance would be biased towards transforms with minimal overlap. An alternative would be to adjust the Hamming distance to include an additional sum equal to half the number of bits used in the descriptor, for each non-overlapping pixel. 
 
 The optimal alignment is then the one which minimizes this normalized Hamming distance.
 
@@ -515,7 +533,7 @@ developed for the $\alpha$-AMD registration model of \cite{ofverstedt2019fast}. 
 \end{table}
 
 
-As described in Section \ref{sec:data}, for each region of interest one SHG and two TPEF images were constructed by taking the average of the images obtained from three different incident polarization angles. The two TPEF images were combined into a single image by averaging the intensities at each pixel. The resulting pair of images (SHG and TPEF) are already aligned, as they are captured using the same equipment on the same tissue slice at the same time.
+As described in Section \ref{sec:data}, for each region of interest one SHG and two TPEF images were constructed by taking the average of the images obtained from three different incident polarization angles. The two TPEF images were combined into a single image by averaging the intensities at each pixel. The resulting pair of images (SHG and TPEF) are already aligned, as they are captured using the same equipment on the same tissue slice at the same time. All the MPM images are single-channel 512 $\times$ 512 pixel images. 
 
 In this section, a series of experiments is used to evaluate the ability of different methods to recover a known (synthetic) transform.
 
@@ -553,7 +571,7 @@ The same threshold value is applied to gradient descent methods, in which the ma
 
 \subsection{Alignment with Mutual Information}
 \label{sec:mi_results}
-Although Mutual Information (MI) has been shown to be an excellent similarity measure for multi-modal images,
+Although Mutual Information (MI) has been shown to be an effective similarity measure for multi-modal images,
 a major drawback is that it is often difficult to find the maximum MI position, since the MI surface tends to have many local maxima and an extremely narrow peak at the true alignment, particularly in the presence of noise \citep{maes1997multimodality}. 
 
 The following experiments were used to find the transform maximising the MI between $I_R$ and $T(I_F)$. Since transforming the floating image can reduce the amount of overlap between the images, which tends to increase the MI, in all cases the Normalized Mutual Information was used. In additions, where the overlapping area dropped below 40\% of the pixels for a given transform, the NMI was set to zero, to avoid bias towards extreme transforms.
@@ -596,7 +614,7 @@ The normalized mutual information was evaluated at a range of transforms $T = [T
     \item $-5 \leq T_r \leq 5$, in steps of 1 degree
     \item $-10 \leq \{T_x, T_y\} \leq 10$, in steps of 2 pixels
 \end{itemize}
-The range of this grid matches the range of random transforms that were applied to the SHG image to create $I_R$. In real applications of multi-modal image registration, it is rare that the true range of transformation parameters could be estimated within such a small margin, although the correct scale could sometimes be accurately estimated from knowledge of the magnifications used when capturing the images. Using a bigger parameter grid would approximate more closely the results that might be achieved in real-world applications, but calculation of mutual information is too  time-consuming for a more extensive evaluation to be undertaken in this study.
+This gives a total of 14,641 grid points to be evaluated. Note that the range of the grid matches the range of random transforms that were applied to the SHG image to create $I_R$. In real applications of multi-modal image registration, it is unlikely that the true range of transformation parameters could be estimated within such a small margin, although the correct scale could sometimes be accurately estimated from knowledge of the magnifications used when capturing the images. Using a bigger parameter grid would approximate more closely the results that might be achieved in real-world applications, but calculation of mutual information is too  time-consuming for a more extensive evaluation to be undertaken in this study.
 
 
 The grid search was repeated after applying smoothing (Gaussian smoothing with $\sigma = 3.0$) and intensity normalization, such that for an image with intensity $I(x)$ at pixel $x$, 
@@ -604,7 +622,7 @@ The grid search was repeated after applying smoothing (Gaussian smoothing with $
 I'(x) = \frac{I(x)-\text{min}(I)}{\text{max}(I)-\text{min}(I)}.
 \]
 
-The smoothing and normalization were applied to both the reference and the floating image. Results are shown in Table \ref{tab:MIresults}.
+The same smoothing and normalization were applied to both the reference and the floating image. Results are shown in Table \ref{tab:MIresults}.
 
 \subsubsection{Mutual Information gradient descent}
 Since a grid search in four dimensions is extremely time consuming and, unless a very fine grid, or a suitable refinement scheme is used (further increasing the computation time), also rather inaccurate, a gradient descent method for finding the MI maximum is also evaluated here. The Broyden–Fletcher–Goldfarb–Shanno (BFGS) algorithm was used, after rescaling the transform parameters such that the order of magnitude of the translation, rotation, and scaling would be equivalent. In this method, the gradient is estimated numerically by making a small change to each parameter in turn. A step is then taken in the direction of steepest descent, and the gradient is recalculated. Step sizes are calculated using a line search algorithm. A library implementation\footnote{https://www.scipy.org/} of the BFGS algorithm was used.
@@ -622,7 +640,7 @@ Experiment (2), as with the above grid search, assumes that the range of possibl
 \subsubsection{Mutual Information evaluation}
 As shown in Table \ref{tab:MIresults}, the best results were achieved when starting a gradient descent search method from the maximum found on a grid of transforms (experiment 7), but good results were also obtained by using a gradient descent method with a multi-start approach (experiment 6). The time taken for the latter was less than half of that taken for the combination of a grid search plus a gradient descent.
 
-Smoothing the images reduced the proportion of successful registrations in the grid search experiment. In several cases, including most of the `failures', the value of the NMI metric was higher at the chosen gridpoint than at the ground truth. This may perhaps be attributed to individual noise pixels from the original image being `smeared' across several pixels in the smoothed images, so that instead of affecting the metric at only a single pixel, the effect is amplified. One example is shown in Figure \ref{fig:MI_surfaces}, which gives the NMI surface for a grid small perturbations from the ground truth alignment, for a (particularly challenging) pair of aligned SHG and TPEF images. Although only two of the four grid dimensions can be illustrated here, multiple local optima can be seen in the first row (which shows NMI values over a coarse grid of parameter values), and they appear stronger in the smoothed image. Even within a very short range of the ground truth position, the use of smoothed images does not necessarily lead to a smoother surface (fine grid, second row).
+Smoothing the images reduced the proportion of successful registrations in the grid search experiment. In several cases, including most of the `failures', the value of the NMI metric was higher at the chosen gridpoint than at the ground truth. This may perhaps be attributed to individual noise pixels from the original image being `smeared' across several pixels in the smoothed images, so that instead of affecting the metric at only a single pixel, the effect is amplified. One example is shown in Figure \ref{fig:MI_surfaces}, which gives the NMI surface for small perturbations from the ground truth alignment, for a (particularly challenging) pair of aligned SHG and TPEF images. Although only two of the four transform parameters can be illustrated here, multiple local optima can be seen in the first row (which shows NMI values over a coarse grid of parameter values), and they appear stronger in the smoothed image (right-hand column). Even within a very short range of the ground truth position, the use of smoothed images does not necessarily lead to a smoother surface (fine grid, second row).
 
 \begin{figure}
 \centering
@@ -671,7 +689,7 @@ For gradient descent, smoothing the images helped the algorithm by increasing th
 
 A structural representation of each SHG and TPEF image was created using the method of \cite{zhu2018pcanet} which is described above in Section \ref{sec:model1}.
 
-Each image was first normalized and then smoothed using a Gaussian filter with $\sigma=3.0$, to reduce the amount of noise apparent in the structural representation. The difference is shown in Figure \ref{fig:tuningPSR}, where for two example hyperparameter settings ($c1=c2=0.01$ and $c1=c2=0.1$), the PSRs resulting from training with unsmoothed and unsmoothed versions of the TPEF images are shown. 
+Each image was first normalized and then smoothed using a Gaussian filter with $\sigma=3.0$, to reduce the amount of noise apparent in the structural representation. The difference is shown in Figure \ref{fig:tuningPSR}, where for two example hyperparameter settings ($c1=c2=0.01$ and $c1=c2=0.1$), the PSRs resulting from training with unsmoothed and smoothed versions of the TPEF images are shown. 
 
 The model was then tuned by undertaking training with each combination of values of $c_1$ and $c_2$ in \{0.01, 0.05, 0.1, 0.2, 0.5\}, and inspecting the resulting structural representations for clarity and visibility of the common structures within an image.
 Values of $c_1=c_2=0.2$ were chosen for SHG images whilst $c_1=c_2=0.1$ gave the clearest structural representations for TPEF images, as shown in Figure \ref{fig:tuningPSR}. The full set of example PSRs for networks trained with these values of $c1$ and $c2$, for both TPEF and SHG images, is shown in Appendix \ref{appendix:tuning}. For each modality, the network, consisting of two layers of eight $3 \times 3$ filters, was trained on a random subset of 100 images.
@@ -709,11 +727,11 @@ It appears that the high-frequency nature of these images does not lend itself w
 
 \subsection{Alignment with Model 2: Discriminative Local Derivative Patterns}
 \label{sec:model2_results}
-In Model 2, the alignment minimizing the Hamming distance between the dLDPs for a pair of images is sought. Since a dLDP binary representation cannot be interpolated it is necessary to recalculate it at each candidate alignment. The (dis)similarity metric is then calculated as the mean Hamming distance, i.e.
+In Model 2, the alignment minimizing the Hamming distance between the dLDPs for a pair of images is sought. Since a dLDP binary representation $R(I)$ cannot be interpolated it is necessary to recalculate it at each candidate alignment. The (dis)similarity metric is then calculated as the mean Hamming distance, i.e.
 \[
 D(I_R, I_F, T) = \frac{1}{N} \sum_x R(I_R) \oplus R(T(I_F)),
 \]
-for candidate transform $T$ which, when applied to the representation $R(.)$ of the floating image $I_F$, leads to an overlap of $N$ pixels $x$ with the representation of the reference image $R(I_R)$. The symbol $\oplus$ denotes the binary XOR operator. The optimal alignment is the one which minimizes this measure. This was estimated using grid search and gradient descent.
+for candidate transform $T$ which, when applied to the floating image $I_F$, leads to an overlap of $N$ pixels $x$ with the reference image $I_R$. The symbol $\oplus$ denotes the binary XOR operator. The optimal alignment is the one which minimizes this measure. This was estimated using grid search and gradient descent.
 
 \begin{figure}
 \centering
@@ -769,7 +787,9 @@ As found with Mutual Information and with PCANet-based Structural Representation
 
 It is clear from the above results that the alignment of SHG with TPEF images is a challenging task, because of the high-frequency nature of these images and the different biological structures visible in each modality. Brightfield images are, to the eye, even more dissimilar to the MPM images than the MPM images are to each other. But the registration of brightfield images with MPM images is needed in order to assist pathologists with diagnosis of clinical samples such as the ones used in this study. The above methods were therefore evaluated on pre-aligned pairs of brightfield and MPM images, to see whether the methods could verify the ground truth.
 
-Based on results from Task 1, three experiments were conducted:
+When collected, the brightfield images are at a higher resolution than the MPM images, with a region of the same size as one MPM image being covered by approximately 1280 $\times$ 1280 pixels (instead of 512 $\times$ 512 for MPM). However, the manually aligned brightfield images used in this section have been resized to 512 $\times$ 512 pixels as part of the alignment process.
+
+As in Task 1, a small synthetic transform is applied to one image and the aim is to estimate this transform. Based on results from Task 1, three experiments were conducted:
 \begin{enumerate}
     \item Mutual Information grid search on original images.
     \item Mutual Information grid search on PCANet-based structural representations of images. The networks were trained with $c_1=0.05$, $_2=0.1$ (brightfield) and $c_1=0.025$, $c_2=0.1$ (MPM), using smoothed versions of the original images. The resulting PSRs were also smoothed.
